@@ -64,8 +64,8 @@ Since this application requires a PHP server and there is **no dedicated server 
 
 2. **Set Permissions (Linux/Mac only):**
    ```bash
-   chmod -R 755 /opt/lampp/htdocs/mikhmon
-   chmod -R 777 /opt/lampp/htdocs/mikhmon/include
+   chmod -R 755 /opt/lampp/htdocs/wifi-billing-system-offline-v1
+   chmod -R 777 /opt/lampp/htdocs//wifi-billing-system-offline-v1/include
    ```
 
 ### Step 3: Access Qtro ISP
@@ -73,12 +73,12 @@ Since this application requires a PHP server and there is **no dedicated server 
 1. **Open your web browser**
 2. **Navigate to:**
    ```
-   http://localhost/mikhmon/admin.php
+   http://localhost//wifi-billing-system-offline-v1/admin.php
    ```
 
 3. **Default Login Credentials:**
    - **Username:** `qtro_isp`
-   - **Password:** `icel`
+   - **Password:** `1234`
    
    ⚠️ **Important:** Change these credentials immediately after first login!
 
@@ -233,8 +233,8 @@ Since this application requires a PHP server and there is **no dedicated server 
 
 **Solutions:**
 - Ensure XAMPP Apache is running (green in XAMPP Control Panel)
-- Check the URL: `http://localhost/mikhmon/admin.php`
-- Try `http://127.0.0.1/mikhmon/admin.php`
+- Check the URL: `http://localhost//wifi-billing-system-offline-v1/admin.php`
+- Try `http://127.0.0.1//wifi-billing-system-offline-v1/admin.php`
 - Restart Apache from XAMPP Control Panel
 
 ### Cannot Connect to MikroTik Router
@@ -288,7 +288,7 @@ Since this application requires a PHP server and there is **no dedicated server 
    - For production, use proper web hosting
 
 4. **Regular Backups:**
-   - Backup `mikhmon/include/config.php` regularly
+   - Backup `/wifi-billing-system-offline-v1/include/config.php` regularly
    - Export user data periodically
 
 ---
