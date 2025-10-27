@@ -1,6 +1,6 @@
 # Qtro ISP - MikroTik Hotspot Management System
 
-![Version](https://img.shields.io/badge/version-3.20-blue.svg)
+![Version](https://img.shields.io/badge/version-1.00-blue.svg)
 ![License](https://img.shields.io/badge/license-GPLv2-green.svg)
 ![PHP](https://img.shields.io/badge/PHP-5.6%2B-purple.svg)
 
