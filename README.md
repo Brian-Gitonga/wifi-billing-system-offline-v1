@@ -8,6 +8,8 @@
 
 **Qtro ISP** is a powerful web-based management system designed for managing MikroTik routers and generating WiFi vouchers for hotspot services. This application allows ISP operators and hotspot providers to easily manage their MikroTik infrastructure through an intuitive web interface.
 
+**Note:** Remote access comming soon in future, which means no installation needed locally Kindly check our main website incase the update is live. Here https://qtroispman.co.ke
+
 ### Key Features
 
 - ✅ **Multi-Router Management** - Add and manage multiple MikroTik routers from a single interface
@@ -57,7 +59,7 @@ Since this application requires a PHP server and there is **no dedicated server 
 
 1. **Extract Qtro ISP files:**
    - Extract the Qtro ISP package
-   - Copy the `mikhmon` folder to XAMPP's `htdocs` directory
+   - Copy the `wifi-billing-system-offline-v1` folder to XAMPP's `htdocs` directory
      - Windows: `C:\xampp\htdocs\`
      - Mac: `/Applications/XAMPP/htdocs/`
      - Linux: `/opt/lampp/htdocs/`
