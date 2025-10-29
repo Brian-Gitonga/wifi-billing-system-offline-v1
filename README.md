@@ -55,7 +55,7 @@ Since this application requires a PHP server and there is **no dedicated server 
    - Click "Start" next to **Apache**
    - Wait until Apache shows "Running" status
 
-### Step 2: Install Qtro ISP
+### Step 2: Install Qtro ISP & Configure your Router
 
 1. **Extract Qtro ISP files:**
    - Extract the Qtro ISP package
@@ -69,6 +69,122 @@ Since this application requires a PHP server and there is **no dedicated server 
    chmod -R 755 /opt/lampp/htdocs/wifi-billing-system-offline-v1
    chmod -R 777 /opt/lampp/htdocs//wifi-billing-system-offline-v1/include
    ```
+
+3. **Configuration Script**
+
+```routeros
+# --- BEGIN: Automated Hotspot + Walled-Garden Setup Script ---
+# Assumptions: fresh/reset router. WAN on ether1. LAN ports ether2-4 + wlan1.
+
+# 0. Safe defaults - remove any lingering old configs (be careful on non-fresh routers)
+# (Comment out these lines if you don't want auto-clean)
+# /interface bridge remove [find]
+# /ip address remove [find]
+# /ip dhcp-server remove [find]
+# /ip hotspot remove [find]
+# /ip hotspot profile remove [find]
+
+# 1. WAN - DHCP client (gets internet from ISP)
+/ip dhcp-client
+add interface=ether1 use-peer-dns=yes use-peer-ntp=yes disabled=no
+
+# 2. Bridge for LAN & Wi-Fi (management + hotspot share same physical network)
+/interface bridge
+add name=bridge-lan
+
+/interface bridge port
+add bridge=bridge-lan interface=ether2
+add bridge=bridge-lan interface=ether3
+add bridge=bridge-lan interface=ether4
+# Add wireless interface to bridge (if present)
+add bridge=bridge-lan interface=wlan1
+
+# 3. Management IP (use this address for Winbox, Mikhmon, API)
+/ip address
+add address=192.168.88.1/24 interface=bridge-lan comment="Management IP - use for Winbox/Mikhmon"
+
+# 4. Hotspot gateway IP (client pool will be in this subnet)
+add address=192.168.89.1/24 interface=bridge-lan comment="Hotspot Gateway"
+
+# 5. NAT masquerade (internet for authenticated users)
+/ip firewall nat
+add chain=srcnat out-interface=ether1 action=masquerade comment="Masquerade WAN"
+
+# 6. Enable API and Winbox only to management/hotspot subnets
+/ip service
+set api disabled=no address=192.168.88.0/24,192.168.89.0/24
+set winbox address=192.168.88.0/24
+
+# 7. DNS (router will answer DNS for clients)
+/ip dns
+set servers=8.8.8.8,8.8.4.4 allow-remote-requests=yes
+
+# 8. Hotspot: pool, profile, and hotspot server
+/ip pool
+add name=hs-pool ranges=192.168.89.2-192.168.89.254
+
+/ip hotspot profile
+add name=hs-profile hotspot-address=192.168.89.1 dns-name=wifi.login html-directory=hotspot
+
+/ip hotspot
+add name=hotspot1 interface=bridge-lan address-pool=hs-pool profile=hs-profile
+
+# 9. Example user profiles and a test voucher (customize rates/profiles as needed)
+/ip hotspot user profile
+add name=1hr limit-uptime=1h rate-limit=2M/2M
+add name=1day limit-uptime=1d rate-limit=2M/2M
+
+/ip hotspot user
+add name=TEST password=1234 profile=1hr comment="Test voucher - delete in prod"
+
+# 10. Walled-garden - ALLOW these domains before login (add your real payment domain below)
+/ip hotspot walled-garden
+add dst-host=qtroispman.co.ke
+add dst-host=*.qtroispman.co.ke
+add dst-host=*.safaricom.com
+add dst-host=*.developer.safaricom.co.ke
+add dst-host=*.safaricom.co.ke
+
+# 11. Firewall - allow router services and block guest -> WAN except allowed services
+# 11.1 Accept established/related (always keep)
+/ip firewall filter
+add chain=forward connection-state=established,related action=accept comment="accept established"
+
+# 11.2 Allow hotspot server traffic (so clients can reach hotspot web pages and router DNS)
+add chain=forward src-address=192.168.89.0/24 dst-address=192.168.89.1 action=accept comment="allow hs clients to hotspot gateway"
+
+# 11.3 Allow DNS from clients to router (so DNS queries go to router)
+add chain=forward src-address=192.168.89.0/24 dst-port=53 protocol=udp action=accept comment="allow DNS to router"
+
+# 11.4 Allow DNS to external servers (if you want to let clients use 8.8.8.8 directly)
+add chain=forward src-address=192.168.89.0/24 dst-port=53 protocol=udp dst-address=8.8.8.8 action=accept comment="allow DNS to 8.8.8.8"
+
+# 11.5 Allow HTTP/HTTPS to walled-garden - NOTE: hotspot walled-garden handles domain allow; we also allow connections to router and DNS.
+# (We cannot reliably match domain names in raw firewall; hotspot walled-garden will permit the DSN+HTTP/HTTPS flows to those hosts.)
+# 11.6 BLOCK: drop all other forwarding from hotspot subnet to WAN - force login
+add chain=forward src-address=192.168.89.0/24 out-interface=ether1 action=drop comment="block hotspot clients to WAN until authenticated"
+
+# 11.7 Router protection - allow Winbox/API only from management net
+add chain=input dst-port=8291 protocol=tcp src-address=192.168.88.0/24 action=accept comment="winbox from mgmt net"
+add chain=input dst-port=8728 protocol=tcp src-address=192.168.88.0/24 action=accept comment="api from mgmt net"
+
+# 11.8 Accept related/established to input
+add chain=input connection-state=established,related action=accept
+
+# 11.9 Drop unwanted input from WAN
+add chain=input in-interface=ether1 action=drop comment="drop direct router input on WAN"
+
+# 12. Wireless basic settings (if wlan1 exists)
+/interface wireless
+set wlan1 disabled=no ssid="MyWiFi" mode=ap-bridge
+
+# 13. Final housekeeping: enable hotspot (already added) and show important info
+:log info "Hotspot setup completed. Management IP is 192.168.88.1. Hotspot gateway 192.168.89.1"
+/ip hotspot print
+/ip address print
+/ip service print
+# --- END: Automated Hotspot + Walled-Garden Setup Script ---
+```
 
 ### Step 3: Access Qtro ISP
 
